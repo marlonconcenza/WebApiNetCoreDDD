@@ -5,6 +5,7 @@ using WebAPI.Service.Validators;
 using WebAPI.Domain.Entities;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Options;
+using WebAPI.Domain.Interfaces;
 
 namespace WebAPI.Application.Controllers
 {
@@ -12,20 +13,27 @@ namespace WebAPI.Application.Controllers
     [ApiController]
     public class UserController : ControllerBase
     {
-        private IOptions<AppSettings> settings;
-        private BaseService<User> service = null;
+        private IOptions<AppSettings> _settings { get; }
+        public IService<User> _service { get; set; }
 
-        public UserController(IOptions<AppSettings> settings)
+        public UserController(IOptions<AppSettings> settings, IService<User> service)
         {
-            this.settings = settings;
-            this.service = new BaseService<User>(this.settings);
+            this._settings = settings;
+            this._service = service;
         }
 
         [HttpPost]
         public async Task<IActionResult> Post([FromBody] User user)
         {
-            Response _response = await service.Post<UserValidator>(user);
-            return Ok(_response);
+            try
+            {
+                var _userCreate = await _service.Post<UserValidator>(user);
+                return Ok(_userCreate);
+            }
+            catch (Exception ex)
+            { 
+                return BadRequest(ex);
+            }
         }
 
         [HttpPut]
@@ -33,16 +41,11 @@ namespace WebAPI.Application.Controllers
         {
             try
             {
-                await service.Put<UserValidator>(user);
-
-                return new ObjectResult(user);
-            }
-            catch (ArgumentException ex)
-            {
-                return NotFound(ex);
+                var _userUpdate = await _service.Put<UserValidator>(user);
+                return Ok(_userUpdate);
             }
             catch (Exception ex)
-            {
+            { 
                 return BadRequest(ex);
             }
         }
@@ -52,16 +55,11 @@ namespace WebAPI.Application.Controllers
         {
             try
             {
-                await service.Delete(id);
-
-                return new NoContentResult();
-            }
-            catch(ArgumentException ex)
-            {
-                return NotFound(ex);
+                await _service.Delete(id);
+                return Ok();
             }
             catch (Exception ex)
-            {
+            { 
                 return BadRequest(ex);
             }
         }
@@ -71,10 +69,11 @@ namespace WebAPI.Application.Controllers
         {
             try
             {
-                return new ObjectResult(await service.GetAll());
+                var _users = await _service.GetAll();
+                return Ok(_users);
             }
             catch (Exception ex)
-            {
+            { 
                 return BadRequest(ex);
             }
         }
@@ -84,14 +83,11 @@ namespace WebAPI.Application.Controllers
         {
             try
             {
-                return new ObjectResult(await service.Get(id));
-            }
-            catch(ArgumentException ex)
-            {
-                return NotFound(ex);
+                var _user = await _service.Get(id);
+                return Ok(_user);
             }
             catch (Exception ex)
-            {
+            { 
                 return BadRequest(ex);
             }
         }
@@ -102,8 +98,8 @@ namespace WebAPI.Application.Controllers
         {
             try {
 
-                Adress adress = await new AdressService().getAdressByCEP(cep);
-                return Ok(adress);
+                var _adress = await new AdressService().getAdressByCEP(cep);
+                return Ok(_adress);
             }
             catch(Exception ex) {
                 return BadRequest(ex);

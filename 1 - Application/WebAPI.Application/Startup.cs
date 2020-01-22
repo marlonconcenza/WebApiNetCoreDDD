@@ -11,6 +11,8 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.OpenApi.Models;
 using WebAPI.Domain.Entities;
+using WebAPI.Domain.Interfaces;
+using WebAPI.Service.Services;
 
 namespace WebAPI.Application
 {
@@ -43,6 +45,7 @@ namespace WebAPI.Application
             });
 
             services.Configure<AppSettings>(Configuration.GetSection("ApplicationSettings"));
+            services.AddSingleton(typeof(IService<>), typeof(BaseService<>));
             services.AddOptions();
             services.AddCors();
             services.AddControllers();
